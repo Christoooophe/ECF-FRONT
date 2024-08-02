@@ -1,13 +1,14 @@
 import React, {useEffect, useState} from 'react';
 import axios from "axios";
+import '../styles/QuestionsDisplay.css'
 
-const QuestionsDisplay = ({score}) => {
+const QuestionsDisplay = ({score, user, id}) => {
 
     const [questions, setQuestions] = useState([]);
     const [question, setQuestion] = useState("");
     const [response, setResponse] = useState("");
     const [userResponse, setUserResponse] = useState("");
-    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [currentQuestion, setCurrentQuestion] = useState(user.userProgression);
     const [ready, setReady] = useState(false);
     const [bonneReponse, setBonneReponse] = useState(false);
     const [displayMessage, setDisplayMessage] = useState(false);
@@ -29,18 +30,18 @@ const QuestionsDisplay = ({score}) => {
         setCurrentQuestion(currentQuestion + 1)
     }
 
-    const updateScore = () => {
-        score.setScore(score.score + 1)
-    }
-
     const checkResponse = () => {
         if (userResponse.toLowerCase() === response) {
-            updateScore();
+            score.setScore(score.score + 1);
             setBonneReponse(true);
         }
         else {
+            if (score.score > 0) {
+                score.setScore(score.score - 1);
+            }
             setBonneReponse(false);
         }
+        // updateScoreAndProgression();
         setUserResponse("");
         setDisplayMessage(true);
     }
@@ -50,6 +51,14 @@ const QuestionsDisplay = ({score}) => {
             .then((response) => setQuestions(response.data))
     }
 
+    // const updateScoreAndProgression = async () => {
+    //     await axios
+    //         .put(`http://localhost:8000/api/joueur/update/${id}`, {
+    //             progression : user.userProgression,
+    //             points : user.userScore
+    //         })
+    // }
+
     const replay = () => {
         setMessageFinal(false);
         changeQuestion();
@@ -57,31 +66,32 @@ const QuestionsDisplay = ({score}) => {
 
     function jeu() {
         return (
-            <div>
-                <p>{score.score}</p>
-                <p>{question}</p>
+            <div className="jeu">
+                <h3>Question {currentQuestion} / {questions.length}</h3>
+                <p>Votre score : {score.score}</p>
+                <h1 id="h1">{question}</h1>
                 {
                     displayMessage ?
                         <>
                             {
                                 bonneReponse ?
-                                    <p>La réponse était bien {response}</p>
+                                    <p>La réponse était bien {response}, vous gagnez 1 point</p>
                                     :
-                                    <p>Mauvaise réponse, la réponse attendue était : {response}</p>
+                                    <p>Mauvaise réponse, la réponse attendue était : {response}, vous perdez 1 point</p>
                             }
                             <button onClick={() => {changeQuestion()}}>Question suivante</button>
                         </>
                         :
-                        <>
-                            <input id="input" type={"text"} onChange={(e) => setUserResponse(e.target.value)} value={userResponse}/>
-                            <button onClick={() => checkResponse()}>Valider</button>
-                        </>
+                        <div id="button-valider">
+                            <input id="input" type={"text"} placeholder="Votre réponse ici..." onChange={(e) => setUserResponse(e.target.value)} value={userResponse}/>
+                            <button onClick={() => checkResponse()}>Valider →</button>
+                        </div>
                 }
             </div>
         )
     }
     return (
-        <div>
+        <div id="main">
             {
                 !messageFinal ?
                     !ready ?
@@ -89,7 +99,7 @@ const QuestionsDisplay = ({score}) => {
                     :
                        jeu()
                 :
-                    <div>
+                    <div className="jeu">
                         <p>Bravo, vous avez terminé ce quizz !</p>
                         <p>Votre score est de {score.score}</p>
                         <p>Voulez vous rejouer ?</p>
